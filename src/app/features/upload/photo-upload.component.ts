@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild, inject, HostListener } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, inject, HostListener, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { PhotoService } from '../../core/services/photo.service';
@@ -198,8 +198,9 @@ import { Observable } from 'rxjs';
 
         <!-- Botones de Navegación del Carrusel -->
         <button 
+          *ngIf="canScrollLeft"
           (click)="scrollCarousel('left')"
-          class="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/90 backdrop-blur rounded-full shadow-xl border border-gold/10 text-gold flex items-center justify-center pointer-events-auto sm:opacity-0 sm:group-hover/carousel:opacity-100 transition-all duration-300 hover:bg-gold hover:text-white"
+          class="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/95 backdrop-blur rounded-full shadow-xl border border-gold/10 text-gold flex items-center justify-center pointer-events-auto transition-all duration-300 hover:bg-gold hover:text-white animate-fade-in"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
@@ -207,8 +208,9 @@ import { Observable } from 'rxjs';
         </button>
 
         <button 
+          *ngIf="canScrollRight"
           (click)="scrollCarousel('right')"
-          class="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/90 backdrop-blur rounded-full shadow-xl border border-gold/10 text-gold flex items-center justify-center pointer-events-auto sm:opacity-0 sm:group-hover/carousel:opacity-100 transition-all duration-300 hover:bg-gold hover:text-white"
+          class="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/95 backdrop-blur rounded-full shadow-xl border border-gold/10 text-gold flex items-center justify-center pointer-events-auto transition-all duration-300 hover:bg-gold hover:text-white animate-fade-in"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -218,8 +220,9 @@ import { Observable } from 'rxjs';
         <!-- Contenedor del Carrusel -->
         <div 
           #carouselContainer
+          (scroll)="checkScrollBoundaries()"
           class="carousel-container flex overflow-x-auto snap-x snap-mandatory gap-8 pb-8 px-4 scrollbar-hide scroll-smooth"
-          style="mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); -webkit-overflow-scrolling: touch;"
+          style="-webkit-overflow-scrolling: touch;"
         >
           <div 
             *ngFor="let album of (albums$ | async)" 
@@ -227,7 +230,7 @@ import { Observable } from 'rxjs';
             (touchend)="onCarouselTouchEnd($event, album.id!)"
             (mousedown)="onCarouselMouseDown($event)"
             (mouseup)="onCarouselMouseUp($event, album.id!)"
-            class="flex-none w-[260px] snap-center group cursor-pointer select-none touch-pan-x"
+            class="flex-none w-[260px] snap-start group cursor-pointer select-none touch-pan-x"
           >
             <!-- Tarjeta Polaroid -->
             <div class="bg-white p-4 shadow-xl rounded-sm transition-all duration-500 hover:-rotate-2 hover:-translate-y-2 hover:shadow-2xl border border-slate-50 relative overflow-hidden pointer-events-none sm:pointer-events-auto">
@@ -300,7 +303,7 @@ import { Observable } from 'rxjs';
     }
   `]
 })
-export class PhotoUploadComponent implements OnInit {
+export class PhotoUploadComponent implements OnInit, AfterViewInit {
   private fb = inject(FormBuilder);
   private photoService = inject(PhotoService);
 
@@ -317,6 +320,10 @@ export class PhotoUploadComponent implements OnInit {
   // Custom Dropdown State
   isDropdownOpen = false;
   selectedAlbumName = '';
+
+  // Estado del Carrusel
+  canScrollLeft = false;
+  canScrollRight = true;
 
   // Control de Tap vs Drag (iOS fix)
   private touchStartX = 0;
@@ -347,18 +354,34 @@ export class PhotoUploadComponent implements OnInit {
     this.albums$ = this.photoService.getAlbums();
   }
 
+  ngAfterViewInit() {
+    // Verificar límites iniciales tras renderizado
+    setTimeout(() => this.checkScrollBoundaries(), 1000);
+  }
+
   scrollCarousel(direction: 'left' | 'right') {
     if (!this.carouselContainer) return;
     const container = this.carouselContainer.nativeElement;
 
-    // Calcular ancho de un elemento + gap para scroll perfecto
-    const itemWidth = 260 + 32; // w-[260px] + gap-8 (32px)
+    const itemWidth = 260 + 32;
 
     if (direction === 'left') {
       container.scrollBy({ left: -itemWidth, behavior: 'smooth' });
     } else {
       container.scrollBy({ left: itemWidth, behavior: 'smooth' });
     }
+
+    // Pequeño delay para verificar tras el scroll suave
+    setTimeout(() => this.checkScrollBoundaries(), 500);
+  }
+
+  checkScrollBoundaries() {
+    if (!this.carouselContainer) return;
+    const container = this.carouselContainer.nativeElement;
+
+    // Margen de error de 5px para redondeos
+    this.canScrollLeft = container.scrollLeft > 5;
+    this.canScrollRight = container.scrollLeft + container.clientWidth < container.scrollWidth - 5;
   }
 
   // LÓGICA DE DETECCIÓN DE TAP VS DRAG
