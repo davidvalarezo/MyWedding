@@ -190,7 +190,7 @@ import { Observable } from 'rxjs';
       </div>
 
       <!-- Sección de Explorar Álbumes (Carrusel Premium) -->
-      <section class="space-y-8 animate-fade-in-up relative group/carousel">
+      <section class="space-y-8 animate-fade-in-up relative group/carousel overflow-hidden">
         <div class="text-center">
           <h3 class="text-2xl font-romantic text-slate-700 italic">Explorar Álbumes</h3>
           <p class="text-slate-400 text-[10px] uppercase tracking-[0.3em] font-light mt-1">Navega por los mejores momentos</p>
@@ -199,7 +199,7 @@ import { Observable } from 'rxjs';
         <!-- Botones de Navegación del Carrusel -->
         <button 
           (click)="scrollCarousel('left')"
-          class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-20 w-12 h-12 bg-white rounded-full shadow-xl border border-gold/10 text-gold flex items-center justify-center opacity-0 group-hover/carousel:opacity-100 group-hover/carousel:translate-x-0 transition-all duration-300 hover:bg-gold hover:text-white"
+          class="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/90 backdrop-blur rounded-full shadow-xl border border-gold/10 text-gold flex items-center justify-center pointer-events-auto sm:opacity-0 sm:group-hover/carousel:opacity-100 transition-all duration-300 hover:bg-gold hover:text-white"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
@@ -208,7 +208,7 @@ import { Observable } from 'rxjs';
 
         <button 
           (click)="scrollCarousel('right')"
-          class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-20 w-12 h-12 bg-white rounded-full shadow-xl border border-gold/10 text-gold flex items-center justify-center opacity-0 group-carousel:opacity-100 group-hover/carousel:opacity-100 group-hover/carousel:translate-x-0 transition-all duration-300 hover:bg-gold hover:text-white"
+          class="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-white/90 backdrop-blur rounded-full shadow-xl border border-gold/10 text-gold flex items-center justify-center pointer-events-auto sm:opacity-0 sm:group-hover/carousel:opacity-100 transition-all duration-300 hover:bg-gold hover:text-white"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -218,16 +218,19 @@ import { Observable } from 'rxjs';
         <!-- Contenedor del Carrusel -->
         <div 
           #carouselContainer
-          class="flex overflow-x-auto snap-x snap-mandatory gap-8 pb-8 px-4 scrollbar-hide scroll-smooth"
-          style="mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);"
+          class="carousel-container flex overflow-x-auto snap-x snap-mandatory gap-8 pb-8 px-4 scrollbar-hide scroll-smooth"
+          style="mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent); -webkit-overflow-scrolling: touch;"
         >
           <div 
             *ngFor="let album of (albums$ | async)" 
-            (click)="onAlbumClick(album.id!)"
-            class="flex-none w-[260px] snap-center group cursor-pointer"
+            (touchstart)="onCarouselTouchStart($event)"
+            (touchend)="onCarouselTouchEnd($event, album.id!)"
+            (mousedown)="onCarouselMouseDown($event)"
+            (mouseup)="onCarouselMouseUp($event, album.id!)"
+            class="flex-none w-[260px] snap-center group cursor-pointer select-none touch-pan-x"
           >
             <!-- Tarjeta Polaroid -->
-            <div class="bg-white p-4 shadow-xl rounded-sm transition-all duration-500 group-hover:-rotate-2 group-hover:-translate-y-2 group-hover:shadow-2xl border border-slate-50 relative overflow-hidden">
+            <div class="bg-white p-4 shadow-xl rounded-sm transition-all duration-500 hover:-rotate-2 hover:-translate-y-2 hover:shadow-2xl border border-slate-50 relative overflow-hidden pointer-events-none sm:pointer-events-auto">
                <div class="absolute inset-0 bg-gold/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                <div class="aspect-square bg-cream rounded-sm flex items-center justify-center text-gold/30 mb-5 overflow-hidden relative">
                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="0.8" stroke="currentColor" class="w-20 h-20 group-hover:scale-110 transition-transform duration-700">
@@ -245,6 +248,8 @@ import { Observable } from 'rxjs';
                </div>
             </div>
           </div>
+          <!-- Spacer para evitar corte abrupto en Safari -->
+          <div class="flex-none w-4 h-full"></div>
         </div>
       </section>
 
@@ -259,8 +264,8 @@ import { Observable } from 'rxjs';
             </svg>
           </div>
         </div>
-        <p class="text-2xl font-romantic text-gold-dark mb-2 italic px-6 text-center">{{ currentMessage }}</p>
-        <p class="text-[10px] text-slate-400 uppercase tracking-[0.3em] font-light">Guardando un pedacito de nuestra historia</p>
+        <p class="text-2xl font-romantic text-gold-dark mb-2 italic px-8 text-center">{{ currentMessage }}</p>
+        <p class="text-[10px] text-slate-400 uppercase tracking-[0.3em] font-light px-8 text-center max-w-sm">Guardando un pedacito de nuestra historia</p>
       </div>
     </div>
   `,
@@ -278,6 +283,20 @@ import { Observable } from 'rxjs';
     .scrollbar-hide {
       -ms-overflow-style: none;
       scrollbar-width: none;
+    }
+    .carousel-container {
+      scroll-snap-type: x mandatory;
+      scroll-padding: 1rem;
+      max-width: 100%;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    /* Mejora de interacción en iOS */
+    @media (hover: none) {
+      .group:active .bg-white {
+        background-color: #fdfaf3;
+        transform: scale(0.98);
+      }
     }
   `]
 })
@@ -298,6 +317,12 @@ export class PhotoUploadComponent implements OnInit {
   // Custom Dropdown State
   isDropdownOpen = false;
   selectedAlbumName = '';
+
+  // Control de Tap vs Drag (iOS fix)
+  private touchStartX = 0;
+  private touchStartY = 0;
+  private touchStartTime = 0;
+  private isMovementOccurred = false;
 
   private messages = [
     'Guardando un beso...',
@@ -325,11 +350,50 @@ export class PhotoUploadComponent implements OnInit {
   scrollCarousel(direction: 'left' | 'right') {
     if (!this.carouselContainer) return;
     const container = this.carouselContainer.nativeElement;
-    const scrollAmount = 300;
+
+    // Calcular ancho de un elemento + gap para scroll perfecto
+    const itemWidth = 260 + 32; // w-[260px] + gap-8 (32px)
+
     if (direction === 'left') {
-      container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+      container.scrollBy({ left: -itemWidth, behavior: 'smooth' });
     } else {
-      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      container.scrollBy({ left: itemWidth, behavior: 'smooth' });
+    }
+  }
+
+  // LÓGICA DE DETECCIÓN DE TAP VS DRAG
+  onCarouselTouchStart(event: TouchEvent) {
+    this.touchStartX = event.touches[0].clientX;
+    this.touchStartY = event.touches[0].clientY;
+    this.touchStartTime = Date.now();
+    this.isMovementOccurred = false;
+  }
+
+  onCarouselTouchEnd(event: TouchEvent, albumId: string) {
+    const touchEndX = event.changedTouches[0].clientX;
+    const touchEndY = event.changedTouches[0].clientY;
+
+    const deltaX = Math.abs(touchEndX - this.touchStartX);
+    const deltaY = Math.abs(touchEndY - this.touchStartY);
+    const duration = Date.now() - this.touchStartTime;
+
+    // Si el movimiento es despreciable (< 8px) y rápido (< 250ms), es un TAP
+    if (deltaX < 8 && deltaY < 8 && duration < 250 && !this.isMovementOccurred) {
+      this.photoService.selectAlbum(albumId);
+    }
+  }
+
+  // Fallback para Mouse
+  onCarouselMouseDown(event: MouseEvent) {
+    this.touchStartX = event.clientX;
+    this.isMovementOccurred = false;
+  }
+
+  onCarouselMouseUp(event: MouseEvent, albumId: string) {
+    const deltaX = Math.abs(event.clientX - this.touchStartX);
+    // Si el desplazamiento es mínimo, es un click intencionado
+    if (deltaX < 5) {
+      this.photoService.selectAlbum(albumId);
     }
   }
 
@@ -449,9 +513,6 @@ export class PhotoUploadComponent implements OnInit {
     }
   }
 
-  onAlbumClick(albumId: string) {
-    this.photoService.selectAlbum(albumId);
-  }
 
   private rotateMessages() {
     let i = 0;

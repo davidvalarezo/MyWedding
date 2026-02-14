@@ -152,14 +152,14 @@ import { saveAs } from 'file-saver';
             </svg>
           </div>
         </div>
-        <h3 class="text-2xl font-romantic text-slate-800 italic mb-2">Generando archivo comprimido</h3>
-        <p class="text-[10px] text-slate-400 uppercase tracking-[0.3em] font-light">Esto puede tardar unos segundos, por favor espera...</p>
+        <h3 class="text-2xl font-romantic text-slate-800 italic mb-2 px-8 text-center">Generando archivo comprimido</h3>
+        <p class="text-[10px] text-slate-400 uppercase tracking-[0.3em] font-light px-8 text-center max-w-sm">Esto puede tardar unos segundos, por favor espera...</p>
       </div>
 
       <!-- CARGANDO -->
       <ng-template #loading>
         <div class="flex justify-center py-32">
-          <div class="flex flex-col items-center">
+          <div class="flex flex-col items-center px-8 text-center">
             <div class="w-16 h-16 border-4 border-gold/10 border-t-gold rounded-full animate-spin mb-6"></div>
             <p class="text-gold-dark/40 tracking-[0.4em] uppercase text-[10px] font-bold">Iniciando Galería</p>
           </div>
