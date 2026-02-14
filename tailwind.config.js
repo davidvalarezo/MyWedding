@@ -6,12 +6,16 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        cream: "#FDFBF7",
+        cream: {
+          DEFAULT: "#FDFBF7",
+          dark: "#F5F0E6",
+        },
         gold: {
           light: "#E5C158",
           DEFAULT: "#D4AF37",
           dark: "#B8860B",
-        }
+        },
+        'card-gold': "#F9F3E5",
       },
       fontFamily: {
         serif: ['Inter', 'serif'], // I'll use standard serif for now, but will link Google Fonts
